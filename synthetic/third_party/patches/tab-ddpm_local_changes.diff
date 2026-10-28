@@ -1,0 +1,133 @@
+diff --git a/lib/data.py b/lib/data.py
+index 912ce25..399e405 100644
+--- a/lib/data.py
++++ b/lib/data.py
+@@ -218,7 +218,7 @@ def normalize(
+         normalizer = sklearn.preprocessing.QuantileTransformer(
+             output_distribution='normal',
+             n_quantiles=max(min(X['train'].shape[0] // 30, 1000), 10),
+-            subsample=1e9,
++            subsample=int(1e9),
+             random_state=seed,
+         )
+         # noise = 1e-3
+diff --git a/scripts/pipeline.py b/scripts/pipeline.py
+index 3f52174..227b674 100644
+--- a/scripts/pipeline.py
++++ b/scripts/pipeline.py
+@@ -4,9 +4,6 @@ import os
+ import argparse
+ from train import train
+ from sample import sample
+-from eval_catboost import train_catboost
+-from eval_mlp import train_mlp
+-from eval_simple import train_simple
+ import pandas as pd
+ import matplotlib.pyplot as plt
+ import zero
+@@ -62,6 +59,7 @@ def main():
+             num_samples=raw_config['sample']['num_samples'],
+             batch_size=raw_config['sample']['batch_size'],
+             disbalance=raw_config['sample'].get('disbalance', None),
++            class_dist=raw_config['sample'].get('class_dist', None),
+             **raw_config['diffusion_params'],
+             parent_dir=raw_config['parent_dir'],
+             real_data_path=raw_config['real_data_path'],
+@@ -78,6 +76,8 @@ def main():
+     save_file(os.path.join(raw_config['parent_dir'], 'info.json'), os.path.join(raw_config['real_data_path'], 'info.json'))
+     if args.eval:
+         if raw_config['eval']['type']['eval_model'] == 'catboost':
++            from eval_catboost import train_catboost
++
+             train_catboost(
+                 parent_dir=raw_config['parent_dir'],
+                 real_data_path=raw_config['real_data_path'],
+@@ -87,6 +87,8 @@ def main():
+                 change_val=args.change_val
+             )
+         elif raw_config['eval']['type']['eval_model'] == 'mlp':
++            from eval_mlp import train_mlp
++
+             train_mlp(
+                 parent_dir=raw_config['parent_dir'],
+                 real_data_path=raw_config['real_data_path'],
+@@ -97,6 +99,8 @@ def main():
+                 device=device
+             )
+         elif raw_config['eval']['type']['eval_model'] == 'simple':
++            from eval_simple import train_simple
++
+             train_simple(
+                 parent_dir=raw_config['parent_dir'],
+                 real_data_path=raw_config['real_data_path'],
+@@ -109,4 +113,4 @@ def main():
+     print(f'Elapsed time: {str(timer)}')
+ 
+ if __name__ == '__main__':
+-    main()
+\ No newline at end of file
++    main()
+diff --git a/scripts/sample.py b/scripts/sample.py
+index 4338646..bc1d9cc 100644
+--- a/scripts/sample.py
++++ b/scripts/sample.py
+@@ -31,6 +31,7 @@ def sample(
+     T_dict = None,
+     num_numerical_features = 0,
+     disbalance = None,
++    class_dist = None,
+     device = torch.device('cuda:1'),
+     seed = 0,
+     change_val = False
+@@ -75,6 +76,15 @@ def sample(
+     diffusion.eval()
+     
+     _, empirical_class_dist = torch.unique(torch.from_numpy(D.y['train']), return_counts=True)
++    if class_dist is not None:
++        requested_class_dist = torch.as_tensor(class_dist, dtype=torch.float32)
++        if requested_class_dist.ndim != 1 or len(requested_class_dist) != len(empirical_class_dist):
++            raise ValueError('class_dist must have one entry per observed class')
++        if not torch.isfinite(requested_class_dist).all() or (requested_class_dist < 0).any():
++            raise ValueError('class_dist must contain finite non-negative weights')
++        if requested_class_dist.sum() <= 0:
++            raise ValueError('class_dist must contain positive total weight')
++        empirical_class_dist = requested_class_dist
+     # empirical_class_dist = empirical_class_dist.float() + torch.tensor([-5000., 10000.]).float()
+     if disbalance == 'fix':
+         empirical_class_dist[0], empirical_class_dist[1] = empirical_class_dist[1], empirical_class_dist[0]
+@@ -156,4 +166,4 @@ def sample(
+         np.save(os.path.join(parent_dir, 'X_num_train'), X_num)
+     if num_numerical_features < X_gen.shape[1]:
+         np.save(os.path.join(parent_dir, 'X_cat_train'), X_cat)
+-    np.save(os.path.join(parent_dir, 'y_train'), y_gen)
+\ No newline at end of file
++    np.save(os.path.join(parent_dir, 'y_train'), y_gen)
+diff --git a/scripts/train.py b/scripts/train.py
+index 06871cf..5d3dcd5 100644
+--- a/scripts/train.py
++++ b/scripts/train.py
+@@ -60,7 +60,7 @@ class Trainer:
+             curr_loss_multi += batch_loss_multi.item() * len(x)
+             curr_loss_gauss += batch_loss_gauss.item() * len(x)
+ 
+-            if (step + 1) % self.log_every == 0:
++            if (step + 1) % self.log_every == 0 or (step + 1) == self.steps:
+                 mloss = np.around(curr_loss_multi / curr_count, 4)
+                 gloss = np.around(curr_loss_gauss / curr_count, 4)
+                 if (step + 1) % self.print_every == 0:
+@@ -155,4 +155,13 @@ def train(
+ 
+     trainer.loss_history.to_csv(os.path.join(parent_dir, 'loss.csv'), index=False)
+     torch.save(diffusion._denoise_fn.state_dict(), os.path.join(parent_dir, 'model.pt'))
+-    torch.save(trainer.ema_model.state_dict(), os.path.join(parent_dir, 'model_ema.pt'))
+\ No newline at end of file
++    torch.save(trainer.ema_model.state_dict(), os.path.join(parent_dir, 'model_ema.pt'))
++    lib.dump_json(
++        {
++            'status': 'SUCCESS',
++            'completed_steps': int(steps),
++            'seed': int(seed),
++            'finite_loss': bool(np.isfinite(trainer.loss_history[['mloss', 'gloss', 'loss']].to_numpy()).all()),
++        },
++        os.path.join(parent_dir, 'training_status.json')
++    )

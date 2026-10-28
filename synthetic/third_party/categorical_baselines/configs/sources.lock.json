@@ -1,0 +1,20 @@
+{
+  "upstream": {
+    "tabsyn": {"url": "https://github.com/amazon-science/tabsyn.git", "commit": "cb5ac0f74ec36ee88e7a974a393dfbef50d42da7"},
+    "tabnat": {"url": "https://github.com/fangliancheng/TabNAT.git", "commit": "f8df4d18ff875622ae86d800c4e2a447b002b1e5"},
+    "stasy": {"url": "https://github.com/JayoungKim408/STaSy.git", "commit": "3dcc660db26e31cc1bbb00cfc14bf7687fde448d"},
+    "tabdiff": {"url": "https://github.com/MinkaiXu/TabDiff.git", "commit": "5ecdb3356261aea72716cc9a779f31d7ad083bf4"},
+    "arfpy": {"url": "https://github.com/bips-hb/arfpy.git", "commit": "8b63c1b3999981125b4af2828ff52cba8e29169d"}
+  },
+  "packages": {
+    "ctgan": {"version": "0.12.1", "source": "https://github.com/sdv-dev/CTGAN"},
+    "imbalanced-learn": {"version": "0.14.2", "source": "https://github.com/scikit-learn-contrib/imbalanced-learn"},
+    "timm": {"version": "0.9.16", "source": "https://github.com/huggingface/pytorch-image-models"}
+  },
+  "local_reuse": {
+    "root": "/data1/calvinkim1027/TDG/Baseline_exp_v4/src/baseline_exp",
+    "copied": ["contracts.py", "seeds.py", "adapters/_helpers.py", "adapters/inprocess.py"],
+    "ported": ["adapters/smote.py:SMOTEENCAdapter", "adapters/tabsyn_family.py:full joint fit and bounded minority rejection"],
+    "changes": ["categorical-only guards", "SMOTE-ENC explicitly removes each point's own index under tied distances", "TabSyn invokes official VAE and EDM directly, omitting empty numerical reconstruction loss"]
+  }
+}

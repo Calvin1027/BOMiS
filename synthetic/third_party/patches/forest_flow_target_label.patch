@@ -1,0 +1,29 @@
+diff --git a/Python-Package/base-ForestDiffusion/ForestDiffusion/diffusion_with_trees_class.py b/Python-Package/base-ForestDiffusion/ForestDiffusion/diffusion_with_trees_class.py
+index 310f503..9c9f9f4 100644
+--- a/Python-Package/base-ForestDiffusion/ForestDiffusion/diffusion_with_trees_class.py
++++ b/Python-Package/base-ForestDiffusion/ForestDiffusion/diffusion_with_trees_class.py
+@@ -400,7 +400,7 @@ class ForestDiffusionModel():
+     return out
+ 
+   # Generate new data by solving the reverse ODE/SDE
+-  def generate(self, batch_size=None, n_t=None, X_covs=None):
++  def generate(self, batch_size=None, n_t=None, X_covs=None, target_label=None):
+ 
+     if X_covs is not None:
+       assert X_covs.shape[0] == batch_size
+@@ -409,7 +409,14 @@ class ForestDiffusionModel():
+     y0 = np.random.normal(size=(self.b if batch_size is None else batch_size, self.c))
+ 
+     # Generate random labels
+-    label_y = self.y_uniques[np.argmax(np.random.multinomial(1, self.y_probs, size=y0.shape[0]), axis=1)]
++    if target_label is None:
++      label_y = self.y_uniques[np.argmax(np.random.multinomial(1, self.y_probs, size=y0.shape[0]), axis=1)]
++    else:
++      if self.label_y is None:
++        raise ValueError("target_label requires a model fitted with label_y")
++      if target_label not in self.y_uniques:
++        raise ValueError(f"target_label={target_label!r} was absent during fitting")
++      label_y = np.full(y0.shape[0], target_label, dtype=self.y_uniques.dtype)
+     mask_y = {} # mask for which observations has a specific value of y
+     for i in range(len(self.y_uniques)):
+       mask_y[self.y_uniques[i]] = np.zeros(y0.shape[0], dtype=bool)

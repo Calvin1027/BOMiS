@@ -1,0 +1,18 @@
+{
+  "purpose": "categorical_generation_v1_full_joint_minority_quality",
+  "lr_multipliers": [1.0, 0.5, 0.25],
+  "models": {
+    "smote": {"k_neighbors": 5},
+    "smoten": {"k_neighbors": 5},
+    "smote_enc": {"k_neighbors": 5},
+    "ctgan": {"epochs": 300, "batch_size": 500, "raw_batch_size": 4096, "max_raw_multiplier": 200},
+    "tvae": {"epochs": 300, "batch_size": 500, "raw_batch_size": 4096, "max_raw_multiplier": 200, "target_decode": "probabilistic_softmax"},
+    "tabsyn": {"epochs": 10001, "vae_epochs": 4000, "batch_size": 4096, "sampling_steps": 50, "raw_batch_size": 2048},
+    "tabnat": {"epochs": 10000, "batch_size": 1024, "embed_dim": 32, "depth": 6, "raw_batch_size": 512},
+    "arf": {"num_trees": 30, "max_iters": 10, "n_jobs": 4, "raw_batch_size": 4096},
+    "stasy": {"epochs": 10000, "batch_size": 1000, "sampling_steps": 50, "fine_tune_epochs": 50, "eps_iters": 50, "raw_batch_size": 256},
+    "tabdiff": {"epochs": 8000, "batch_size": 4096, "sampling_steps": 50, "raw_batch_size": 1024},
+    "ros": {},
+    "independent": {}
+  }
+}

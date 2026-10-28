@@ -1,0 +1,33 @@
+# 덧댄 폴더 1: generation (PYTHONPATH로 base 위에 얹힘). pip install --target, 적힌 순서대로 설치.
+# zero 0.9.2와 libzero 0.0.8은 같은 zero/ 폴더를 쓴다. 원래 폴더처럼 zero를 먼저, libzero를 나중에 설치해 libzero가 덮어쓰게 한다.
+boto3==1.43.82
+botocore==1.43.82
+catboost==1.2.10
+category-encoders==2.8.1
+cloudpickle==3.1.2
+colorama==0.4.6
+copulas==0.14.1
+ctgan==0.12.1
+deepecho==0.8.1
+faker==40.36.0
+graphviz==0.21
+icecream==2.2.0
+imbalanced-learn==0.14.2
+jmespath==1.1.0
+narwhals==2.24.0
+opentelemetry-api==1.44.0
+patsy==1.0.2
+plotly==6.9.0
+prdc==0.2
+protobuf==7.35.1
+rdt==1.22.0
+s3transfer==0.19.2
+sdmetrics==0.30.0
+sentry-sdk==2.68.0
+sklearn-compat==0.1.6
+tomli-w==1.2.0
+torchdiffeq==0.2.5
+wandb==0.28.2
+zero==0.9.2
+libzero==0.0.8
+statsmodels==0.14.6

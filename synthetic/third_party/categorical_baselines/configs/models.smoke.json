@@ -1,0 +1,15 @@
+{
+  "purpose": "engineering_smoke_only_not_benchmark_quality",
+  "models": {
+    "smote": {"k_neighbors": 5},
+    "smoten": {"k_neighbors": 5},
+    "smote_enc": {"k_neighbors": 5},
+    "ctgan": {"epochs": 2, "batch_size": 100, "max_raw_multiplier": 200, "raw_batch_size": 256},
+    "tvae": {"epochs": 2, "batch_size": 100, "max_raw_multiplier": 200, "raw_batch_size": 256, "target_decode": "probabilistic_softmax"},
+    "tabsyn": {"epochs": 2, "vae_epochs": 2, "batch_size": 256, "hidden_dim": 64, "sampling_steps": 4, "raw_batch_size": 256, "max_raw_multiplier": 200},
+    "tabnat": {"epochs": 2, "batch_size": 256, "depth": 2, "embed_dim": 16, "raw_batch_size": 64, "max_raw_multiplier": 200},
+    "arf": {"num_trees": 10, "max_iters": 1, "n_jobs": 2, "raw_batch_size": 128, "max_raw_multiplier": 200},
+    "stasy": {"epochs": 2, "batch_size": 256, "hidden_dims": [32, 64, 32], "nf": 16, "sampling_steps": 4, "fine_tune_epochs": 1, "eps_iters": 1, "ode_tolerance": 0.001, "raw_batch_size": 64, "max_raw_multiplier": 200},
+    "tabdiff": {"epochs": 2, "batch_size": 256, "dim_t": 64, "sampling_steps": 4, "raw_batch_size": 128, "max_raw_multiplier": 200}
+  }
+}

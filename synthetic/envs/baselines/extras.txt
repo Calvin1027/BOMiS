@@ -1,0 +1,6 @@
+# 덧댄 폴더 3: extras (categorical_baselines 경로에서 PYTHONPATH 앞쪽, 원래는 extras.tar.gz). pip install --target.
+absl-py==2.4.0
+ml-collections==1.1.0
+pytest==8.4.2
+ruff==0.15.7
+timm==0.9.16

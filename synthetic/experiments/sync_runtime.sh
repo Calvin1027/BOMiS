@@ -5,7 +5,7 @@ source_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$source_root/config/paths.sh"
 runtime_root="$BOMIS_RUNTIME"
 mkdir -p "$runtime_root"/{logs,results,reports}
-for directory in dgp scripts tests experiments vendor baselines config; do
+for directory in dgp scripts tests experiments vendor baselines config third_party; do
     mkdir -p "$runtime_root/$directory"
     rsync -a --delete --exclude "__pycache__" "$source_root/$directory/" "$runtime_root/$directory/"
 done
