@@ -23,7 +23,7 @@ frequent 결과(`reports/easy_results_1027.md`)와 같은 세팅을 STZ 수준 m
 
 ## 2. 인증 경계와 BOMiS의 leak
 
-| STZ 수준 | $n_1$ | 인증 신호 $s$ (설계 3.4절) | C가 인증한 금지 쌍 (4개 중) | BOMiS leak | BOMiS control |
+| STZ 수준 | $n_1$ | 인증 신호 $s$ (설계 문서 4.6절) | C가 인증한 금지 쌍 (4개 중) | BOMiS leak | BOMiS control |
 |---|---|---|---|---|---|
 | frequent | 400 | 1.41 | 4 (180칸 모두) | 0 | 1.000 |
 | frequent | 800 | 2.82 | 4 | 0 | 1.000 |
