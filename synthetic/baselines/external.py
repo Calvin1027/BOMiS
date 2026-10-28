@@ -12,19 +12,25 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-RUNTIME = Path("/mnt/data1/calvinkim1027/BOMIS_new_수만이형_runtime")
-BL_PYTHON = "/mnt/data1/calvinkim1027/miniconda3/envs/tabular_foundation/bin/python"
-GEN_SITE = "/mnt/data1/calvinkim1027/baseline_exp_runtime_v3/envs/generation"
-EXTRAS = Path("/mnt/data1/calvinkim1027/categorical_baselines_runtime_20260929/extras.tar.gz")
+
+def _path(name: str, default: str) -> str:
+    """경로 설정(config/paths.sh에서 export). 없으면 원래 서버 경로. 빈 문자열이면 '쓰지 않음'."""
+    return os.environ.get(name, default)
+
+
+RUNTIME = Path(_path("BOMIS_RUNTIME", "/mnt/data1/calvinkim1027/BOMIS_new_수만이형_runtime"))
+BL_PYTHON = _path("BL_PYTHON", "/mnt/data1/calvinkim1027/miniconda3/envs/tabular_foundation/bin/python")
+GEN_SITE = _path("BL_GEN_SITE", "/mnt/data1/calvinkim1027/baseline_exp_runtime_v3/envs/generation")
+EXTRAS = _path("BL_EXTRAS_TAR", "/mnt/data1/calvinkim1027/categorical_baselines_runtime_20260929/extras.tar.gz")
 COLS = [f"c{j}" for j in range(8)]
 A_MODELS = ("smoten", "smote_enc", "ctgan")
 B_MODELS = ("tabsyn", "tabdiff")
 DEVICE = {"smoten": "cpu", "smote_enc": "cpu", "smote": "cpu", "arf": "cpu", "ctgan": "cuda", "tabsyn": "cuda",
           "tabdiff": "cuda", "tabddpm": "cuda", "forest_flow": "cpu"}
 # TabDDPM은 categorical_baselines에 없어 과거 파이프라인(Baseline_exp_v4) 코드를 tabddpm_cli.py로 부른다.
-V4_SRC = "/mnt/data1/calvinkim1027/baseline_exp_runtime_v4_32g_20260910b/TDG/Baseline_exp_v4/src"
-TABDDPM_SITE = "/mnt/data1/calvinkim1027/baseline_exp_runtime_v3/envs/tabddpm_extras"
-_TABDDPM_SOURCE = "/mnt/data1/calvinkim1027/baseline_exp_runtime_v3/TDG/MCMC_in_generative model/generator_stage_v1/third_party/tab-ddpm"
+V4_SRC = _path("BL_V4_SRC", "/mnt/data1/calvinkim1027/baseline_exp_runtime_v4_32g_20260910b/TDG/Baseline_exp_v4/src")
+TABDDPM_SITE = _path("BL_TABDDPM_SITE", "/mnt/data1/calvinkim1027/baseline_exp_runtime_v3/envs/tabddpm_extras")
+_TABDDPM_SOURCE = _path("BL_TABDDPM_SOURCE", "/mnt/data1/calvinkim1027/baseline_exp_runtime_v3/TDG/MCMC_in_generative model/generator_stage_v1/third_party/tab-ddpm")
 # reference = 과거 최종 설정(configs/models.climb_final.v8.full_access.no_forest.json), smoke = 연결 확인용
 TABDDPM = {
     "reference": {"source_dir": _TABDDPM_SOURCE, "train_steps": 10000, "diffusion_steps": 1000, "batch_size": 1024,
@@ -36,8 +42,8 @@ TABDDPM = {
 }
 # ForestDiffusion(Forest-Flow)도 과거 파이프라인 어댑터를 forestflow_cli.py로 부른다.
 # reference = 과거 최종 설정(Baseline_exp_v2/configs/models.climb_final.v4.json), smoke = 과거 models.smoke.v3.json
-_FF = {"source_dir": "/mnt/data1/calvinkim1027/baseline_exp_runtime_v3/TDG/Baseline_exp_v2/third_party/ForestDiffusion",
-       "patch_file": "/mnt/data1/calvinkim1027/baseline_exp_runtime_v3/TDG/Baseline_exp_v2/patches/forest_flow_target_label.patch"}
+_FF = {"source_dir": _path("BL_FF_SOURCE", "/mnt/data1/calvinkim1027/baseline_exp_runtime_v3/TDG/Baseline_exp_v2/third_party/ForestDiffusion"),
+       "patch_file": _path("BL_FF_PATCH", "/mnt/data1/calvinkim1027/baseline_exp_runtime_v3/TDG/Baseline_exp_v2/patches/forest_flow_target_label.patch")}
 FORESTFLOW = {
     "reference": {**_FF, "n_t": 50, "duplicate_k": 100, "n_batch": 1, "n_jobs": 2, "n_estimators": 100, "max_depth": 7},
     "smoke": {**_FF, "n_t": 5, "duplicate_k": 2, "n_batch": 1, "n_jobs": 4, "n_estimators": 20, "max_depth": 4},
@@ -59,10 +65,17 @@ def bl_src() -> Path:
     return Path(os.environ.get("BL_SRC", RUNTIME / "baselines_src"))
 
 
-def ensure_deps() -> Path:
-    # D27.2: extras는 job마다 노드 로컬 폴더에 한 번 푼다.
+def _pythonpath(*parts) -> str:
+    # 빈 값(설정에서 끈 경로)은 건너뛴다.
+    return ":".join(str(p) for p in parts if p)
+
+
+def ensure_deps() -> Path | None:
+    # D27.2: extras는 job마다 노드 로컬 폴더에 한 번 푼다. BL_EXTRAS_TAR가 빈 값이면 쓰지 않는다(env에 이미 설치된 경우).
     if os.environ.get("BL_DEPS"):
         return Path(os.environ["BL_DEPS"])
+    if not EXTRAS:
+        return None
     tag = os.environ.get("SLURM_JOB_ID", str(os.getpid()))
     deps = Path(os.environ.get("SLURM_TMPDIR") or "/tmp") / f"bl_deps_{tag}"
     marker = deps / ".unpacked"
@@ -91,12 +104,12 @@ def _attempt(name, options, train_csv, n, seed, device, workdir, timeout):
     env["PYTHONDONTWRITEBYTECODE"] = "1"
     python = os.environ.get("BL_PYTHON", BL_PYTHON)
     if name in OLD_PIPELINE:
-        env["PYTHONPATH"] = f"{V4_SRC}:{TABDDPM_SITE}:{GEN_SITE}"
+        env["PYTHONPATH"] = _pythonpath(V4_SRC, TABDDPM_SITE, GEN_SITE)
         cmd = [python, str(Path(__file__).resolve().with_name(OLD_PIPELINE[name][0])), "--train", str(train_csv),
                "--config", str(config), "--seed", str(seed), "--rows", str(n), "--output", str(out)]
         cwd = workdir
     else:
-        env["PYTHONPATH"] = f"{src / 'src'}:{ensure_deps()}:{GEN_SITE}"
+        env["PYTHONPATH"] = _pythonpath(src / "src", ensure_deps(), GEN_SITE)
         cmd = [python, "-m", "categorical_baselines.cli",
                "--model", name, "--train", str(train_csv), "--config", str(config),
                "--seed", str(seed), "--rows", str(n), "--device", device, "--output", str(out)]

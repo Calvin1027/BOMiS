@@ -12,3 +12,6 @@ __pycache__/
 # 기타
 .DS_Store
 *.log
+
+# 사용자별 경로 설정 (예시는 synthetic/config/paths.example.sh)
+synthetic/config/paths.sh

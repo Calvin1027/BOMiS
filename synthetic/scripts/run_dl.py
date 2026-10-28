@@ -33,7 +33,8 @@ def main():
     args = ap.parse_args()
     pop_paths = sorted(Path(args.pops).glob("pop_*.npz"))[:3]
     if args.quick:
-        smoke = Path(os.environ.get("BL_SRC", "/mnt/data1/calvinkim1027/BOMIS_new_수만이형_runtime/baselines_src")) / "configs" / "models.smoke.json"
+        from baselines.external import bl_src
+        smoke = bl_src() / "configs" / "models.smoke.json"
         run_cell(pop_paths[0], 400, 0, args.models, "results/dl_smoke", env="frequent__fav", base_config=smoke)
         return
     model, group = units(pop_paths, args.seeds, args.models, env_list(args.levels))[args.task_id]

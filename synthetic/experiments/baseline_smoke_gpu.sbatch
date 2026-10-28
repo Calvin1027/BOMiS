@@ -6,9 +6,9 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=16G
 #SBATCH --time=01:00:00
-#SBATCH --chdir=/mnt/data1/calvinkim1027/BOMIS_new_수만이형_runtime
 #SBATCH --output=logs/%x_%j.log
 set -euo pipefail
+cd "$SLURM_SUBMIT_DIR" && source config/paths.sh  # 런타임 폴더($BOMIS_RUNTIME)에서 제출한다
 echo "job=$SLURM_JOB_ID node=$SLURMD_NODENAME"; sha256sum scripts/baseline_smoke.py baselines/external.py
 nvidia-smi --query-gpu=name,memory.total --format=csv
-/mnt/data1/calvinkim1027/miniconda3/envs/bomis/bin/python -I scripts/baseline_smoke.py --models ctgan
+"$BOMIS_PY" -I scripts/baseline_smoke.py --models ctgan

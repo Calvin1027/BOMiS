@@ -126,7 +126,8 @@ def main():
     if args.quick:
         pop_paths, args.seeds = pop_paths[:1], [0]
         bomis_kw = {"steps": 250}
-        base_config = Path(os.environ.get("BL_SRC", "/mnt/data1/calvinkim1027/BOMIS_new_수만이형_runtime/baselines_src")) / "configs" / "models.smoke.json"
+        from baselines.external import bl_src
+        base_config = bl_src() / "configs" / "models.smoke.json"
     todo = cells(pop_paths, args.seeds)
     if args.quick:
         todo = todo[:1]
