@@ -1,0 +1,14 @@
+# 공개 전 초안과 원저자 저장소 사본 (vendor/에 고정 사본이 따로 있음)
+refs/
+
+# 칸별 실행 결과 (런타임 폴더에서 생성됨)
+results/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# 기타
+.DS_Store
+*.log
