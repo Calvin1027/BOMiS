@@ -43,9 +43,9 @@ python -m pytest                                                    # 테스트
 python scripts/run_easy.py --group cpu --task-id 0                  # 칸 하나 (A/B/C, BOMiS, ROS, SMOTE)
 ```
 
-## 주의: 아직 원래 서버 경로에 묶여 있는 부분
+## 환경 설치와 경로
 
-- `baselines/external.py`: baseline 실행 env, 외부 baseline 프로젝트(`categorical_baselines`, 과거 TabDDPM·ForestDiffusion 코드) 경로
-- `scripts/run_easy.py`, `scripts/run_dl.py`, `experiments/*.sbatch`, `experiments/sync_*.sh`: 런타임 폴더·env 경로, Slurm 파티션 설정
-
-`dgp/`, `vendor/`, `tests/`와 BOMiS·A/B/C 실행은 위 패키지만 있으면 경로와 무관하게 돈다. 외부 baseline은 해당 프로젝트 코드가 따로 필요하다. 경로 정리는 다음 커밋에서 할 예정이다.
+- 설치 방법: [`envs/README.md`](envs/README.md). env 두 개와 덧댄 폴더 3개를 패키지 버전까지 원래와 같게 만들고, 원래 결과와 비교한 내용도 거기에 적혀 있다.
+- 경로: `config/paths.sh`에서 읽는다. `config/paths.example.sh`를 복사해서 만들고, 이 파일은 git에 올리지 않는다.
+- 외부 baseline 코드: `third_party/` (출처와 라이선스는 `third_party/SOURCES.md`).
+- `experiments/*.sbatch`의 Slurm 파티션은 brl 서버 기준이다.

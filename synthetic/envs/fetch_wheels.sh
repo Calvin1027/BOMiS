@@ -31,6 +31,19 @@ ok_tag() {  # 파일 이름이 이 서버에서 설치 가능한 wheel인지
   (( best == 1 ))
 }
 
+wheel_rank() {  # pip의 선호 순서: glibc 요구 버전이 높은 빌드 > 낮은 빌드 > linux_x86_64 > any
+  local f=$1 r=0 t
+  [[ $f == *-any.whl ]] && { echo 0; return; }
+  r=1
+  [[ $f == *manylinux1_* ]] && r=5
+  [[ $f == *manylinux2010_* ]] && r=12
+  [[ $f == *manylinux2014_* ]] && r=17
+  for t in $(grep -oE 'manylinux_2_[0-9]+' <<<"$f" | sed 's/manylinux_2_//'); do
+    (( 200 + t <= GLIBC_MAX && t > r )) && r=$t
+  done
+  echo "$r"
+}
+
 grep -vE '^\s*(#|$)' "$REQ" | while read -r spec; do
   name=${spec%%==*} ver=${spec##*==}
   if [[ $ver == *+* ]]; then  # PyTorch 저장소의 로컬 버전(예: 2.5.1+cu121)
@@ -40,10 +53,13 @@ grep -vE '^\s*(#|$)' "$REQ" | while read -r spec; do
     continue
   fi
   json=$(curl -sf "https://pypi.org/pypi/$name/$ver/json") || { echo "NONE $name $ver (PyPI에 없음)" >> "$PLAN"; continue; }
-  pick=""
-  while read -r url; do
+  pick="" best=-1
+  while read -r url; do  # 설치 가능한 wheel 중 pip처럼 가장 최신 glibc 빌드를 고른다
     [[ -z $url ]] && continue
-    if ok_tag "$(basename "$url")"; then pick=$url; break; fi
+    f=$(basename "$url")
+    ok_tag "$f" || continue
+    s=$(wheel_rank "$f")
+    (( s > best )) && { best=$s; pick=$url; }
   done < <(jq -r '.urls[] | select(.packagetype=="bdist_wheel") | .url' <<<"$json")
   if [[ -z $pick ]]; then  # 맞는 wheel이 없으면 소스 배포판
     pick=$(jq -r '[.urls[] | select(.packagetype=="sdist")][0].url // empty' <<<"$json")

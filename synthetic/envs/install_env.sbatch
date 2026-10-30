@@ -4,7 +4,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=8G
-#SBATCH --time=02:00:00
+#SBATCH --time=08:00:00
 #SBATCH --output=env_install_%j.log
 # 계산 노드에서 미리 받은 wheel로 env에 고정 버전을 오프라인 설치하고, 설치 결과가 requirements와 같은지 확인한다.
 # 먼저 로그인 노드에서: conda create -y -p <ENV_PREFIX> python=<버전> pip, bash envs/fetch_wheels.sh ...

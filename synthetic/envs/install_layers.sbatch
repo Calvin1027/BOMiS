@@ -4,7 +4,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=8G
-#SBATCH --time=01:00:00
+#SBATCH --time=04:00:00
 #SBATCH --output=bl_layers_%j.log
 # baseline env 위에 PYTHONPATH로 얹는 패키지 폴더 3개(generation, tabddpm_extras, extras)를 원래 서버와 같은 구성으로 만든다.
 # base env(envs/baselines/base.txt)를 먼저 install_env.sbatch로 설치하고, wheel은 fetch_wheels.sh로 받아 둔다.
